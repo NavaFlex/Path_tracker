@@ -1,479 +1,157 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Indoor Path_tracker</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .container {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 1000px;
-            width: 100%;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 32px;
-        }
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-        .input-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-        .input-section h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-        textarea {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            resize: vertical;
-            min-height: 120px;
-        }
-        textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        .button-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin: 20px 0;
-        }
-        button {
-            padding: 12px 30px;
-            font-size: 16px;
-            font-weight: bold;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            color: white;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
-        }
-        .btn-secondary {
-            background: #6c757d;
-        }
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-        .btn-success {
-            background: #28a745;
-        }
-        .btn-success:hover {
-            background: #218838;
-        }
-        #canvas {
-            display: block;
-            margin: 20px auto;
-            border: 3px solid #667eea;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            background: white;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            color: white;
-        }
-        .stat-label {
-            font-size: 12px;
-            opacity: 0.9;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .stat-value {
-            font-size: 32px;
-            font-weight: bold;
-        }
-        .instructions {
-            background: #e7f3ff;
-            border-left: 4px solid #2196F3;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-        .instructions h4 {
-            color: #2196F3;
-            margin-bottom: 10px;
-        }
-        .instructions ol {
-            margin-left: 20px;
-        }
-        .instructions li {
-            margin: 5px 0;
-            color: #333;
-        }
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-            }
-            h1 {
-                font-size: 24px;
-            }
-            #canvas {
-                width: 100% !important;
-                height: auto !important;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Path_tracker</title>
+
+<style>
+body{
+    font-family:Arial;
+    background:#0f1117;
+    color:white;
+    text-align:center;
+}
+button{
+    padding:14px 30px;
+    font-size:18px;
+    margin:10px;
+    border:none;
+    border-radius:8px;
+    background:#00c853;
+    color:white;
+    cursor:pointer;
+}
+canvas{
+    background:white;
+    border:3px solid #00c853;
+    margin-top:20px;
+}
+.stat{
+    font-size:22px;
+    margin:8px;
+}
+</style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>🗺️ Indoor Path_tracker</h1>
-        <p class="subtitle">Visualize your walking path with step-by-step precision</p>
-        
-        <div class="instructions">
-            <h4>📋 How to Use:</h4>
-            <ol>
-                <li>Upload the Arduino code to your XIAO nRF52840</li>
-                <li>Open Serial Monitor (115200 baud)</li>
-                <li>Walk around and let it track your steps</li>
-                <li>Type <strong>'P'</strong> in Serial Monitor to export data</li>
-                <li>Copy the CSV data and paste it below</li>
-                <li>Click "Visualize Path" to see your route!</li>
-            </ol>
-        </div>
-        
-        <div class="input-section">
-            <h3>📊 Paste Your Path Data</h3>
-            <textarea id="dataInput" placeholder="Paste CSV data here...
-Example:
-Step#, Time(s), X(m), Y(m), Distance(m)
-0, 0.0, 0.000, 0.000, 0.000
-1, 1.5, 0.000, 0.650, 0.650
-2, 3.0, 0.000, 1.300, 1.300"></textarea>
-        </div>
-        
-        <div class="button-group">
-            <button class="btn-primary" onclick="loadData()">📈 Visualize Path</button>
-            <button class="btn-secondary" onclick="clearPath()">🗑️ Clear</button>
-            <button class="btn-secondary" onclick="zoomIn()">🔍 Zoom In</button>
-            <button class="btn-secondary" onclick="zoomOut()">🔍 Zoom Out</button>
-            <button class="btn-success" onclick="downloadPath()">💾 Download CSV</button>
-        </div>
-        
-        <canvas id="canvas" width="800" height="600"></canvas>
-        
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Steps</div>
-                <div class="stat-value" id="steps">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Distance</div>
-                <div class="stat-value"><span id="distance">0.0</span>m</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Position X</div>
-                <div class="stat-value"><span id="posX">0.0</span>m</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Position Y</div>
-                <div class="stat-value"><span id="posY">0.0</span>m</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Area</div>
-                <div class="stat-value"><span id="area">0</span>m²</div>
-            </div>
-        </div>
-    </div>
 
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        let pathData = [];
-        let scale = 50;
-        let offsetX = 0;
-        let offsetY = 0;
+<h1>🛰️ Path_tracker LIVE</h1>
 
-        function drawPath() {
-            if(pathData.length === 0) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#999';
-                ctx.font = '20px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('Paste data and click "Visualize Path"', canvas.width/2, canvas.height/2);
-                return;
-            }
+<button onclick="connectBLE()">📡 Connect BLE</button>
 
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
+<div class="stat">Steps: <span id="steps">0</span></div>
+<div class="stat">Distance: <span id="distance">0</span> m</div>
+<div class="stat">X: <span id="posX">0</span></div>
+<div class="stat">Y: <span id="posY">0</span></div>
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw grid
-            ctx.strokeStyle = '#f0f0f0';
-            ctx.lineWidth = 1;
-            for(let i = -20; i <= 20; i++) {
-                ctx.beginPath();
-                ctx.moveTo(0, centerY + i * scale + offsetY);
-                ctx.lineTo(canvas.width, centerY + i * scale + offsetY);
-                ctx.stroke();
-                
-                ctx.beginPath();
-                ctx.moveTo(centerX + i * scale + offsetX, 0);
-                ctx.lineTo(centerX + i * scale + offsetX, canvas.height);
-                ctx.stroke();
-            }
-            
-            // Draw axes
-            ctx.strokeStyle = '#ccc';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, centerY + offsetY);
-            ctx.lineTo(canvas.width, centerY + offsetY);
-            ctx.moveTo(centerX + offsetX, 0);
-            ctx.lineTo(centerX + offsetX, canvas.height);
-            ctx.stroke();
-            
-            // Draw labels
-            ctx.fillStyle = '#999';
-            ctx.font = '12px Arial';
-            ctx.textAlign = 'center';
-            for(let i = -10; i <= 10; i++) {
-                if(i !== 0 && Math.abs(i * scale) < canvas.width/2) {
-                    ctx.fillText(i + 'm', centerX + i * scale + offsetX, centerY + offsetY + 20);
-                }
-            }
-            
-            // Draw path with gradient
-            if(pathData.length > 1) {
-                const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-                gradient.addColorStop(0, '#667eea');
-                gradient.addColorStop(1, '#764ba2');
-                
-                ctx.strokeStyle = gradient;
-                ctx.lineWidth = 4;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.beginPath();
-                
-                const firstPoint = pathData[0];
-                ctx.moveTo(
-                    centerX + firstPoint.x * scale + offsetX,
-                    centerY - firstPoint.y * scale + offsetY
-                );
-                
-                for(let i = 1; i < pathData.length; i++) {
-                    ctx.lineTo(
-                        centerX + pathData[i].x * scale + offsetX,
-                        centerY - pathData[i].y * scale + offsetY
-                    );
-                }
-                ctx.stroke();
-                
-                // Draw points
-                pathData.forEach((point, i) => {
-                    const x = centerX + point.x * scale + offsetX;
-                    const y = centerY - point.y * scale + offsetY;
-                    
-                    if(i === 0) {
-                        // Start point
-                        ctx.fillStyle = '#4CAF50';
-                        ctx.beginPath();
-                        ctx.arc(x, y, 10, 0, 2 * Math.PI);
-                        ctx.fill();
-                        ctx.strokeStyle = 'white';
-                        ctx.lineWidth = 3;
-                        ctx.stroke();
-                        
-                        ctx.fillStyle = 'white';
-                        ctx.font = 'bold 14px Arial';
-                        ctx.textAlign = 'left';
-                        ctx.fillText('START', x + 15, y + 5);
-                    } else if(i === pathData.length - 1) {
-                        // End point
-                        ctx.fillStyle = '#F44336';
-                        ctx.beginPath();
-                        ctx.arc(x, y, 10, 0, 2 * Math.PI);
-                        ctx.fill();
-                        ctx.strokeStyle = 'white';
-                        ctx.lineWidth = 3;
-                        ctx.stroke();
-                        
-                        ctx.fillStyle = 'white';
-                        ctx.font = 'bold 14px Arial';
-                        ctx.textAlign = 'left';
-                        ctx.fillText('END', x + 15, y + 5);
-                    } else if(i % 5 === 0) {
-                        // Intermediate points
-                        ctx.fillStyle = '#2196F3';
-                        ctx.beginPath();
-                        ctx.arc(x, y, 4, 0, 2 * Math.PI);
-                        ctx.fill();
-                    }
-                });
-            }
-        }
+<canvas id="canvas" width="700" height="500"></canvas>
 
-        function loadData() {
-            const input = document.getElementById('dataInput').value;
-            if(!input.trim()) {
-                alert('Please paste CSV data first!');
-                return;
-            }
+<script>
+let device;
+let pathData=[];
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+const scale=60;
 
-            const lines = input.trim().split('\n');
-            pathData = [];
-            
-            lines.forEach((line, index) => {
-                // Skip header line
-                if(index === 0 && line.toLowerCase().includes('step')) return;
-                
-                const parts = line.split(',').map(s => s.trim());
-                if(parts.length >= 4 && !isNaN(parts[2])) {
-                    pathData.push({
-                        step: parseInt(parts[0]) || 0,
-                        time: parseFloat(parts[1]) || 0,
-                        x: parseFloat(parts[2]),
-                        y: parseFloat(parts[3])
-                    });
-                }
-            });
-            
-            if(pathData.length === 0) {
-                alert('No valid data found. Make sure to paste CSV in format:\nStep#, Time(s), X(m), Y(m), Distance(m)');
-                return;
-            }
+async function connectBLE(){
+try{
 
-            // Calculate stats
-            const last = pathData[pathData.length - 1];
-            document.getElementById('steps').textContent = last.step;
-            document.getElementById('posX').textContent = last.x.toFixed(2);
-            document.getElementById('posY').textContent = last.y.toFixed(2);
-            
-            let totalDist = 0;
-            for(let i = 1; i < pathData.length; i++) {
-                const dx = pathData[i].x - pathData[i-1].x;
-                const dy = pathData[i].y - pathData[i-1].y;
-                totalDist += Math.sqrt(dx*dx + dy*dy);
-            }
-            document.getElementById('distance').textContent = totalDist.toFixed(2);
-            
-            // Calculate area (bounding box)
-            const xCoords = pathData.map(p => p.x);
-            const yCoords = pathData.map(p => p.y);
-            const width = Math.max(...xCoords) - Math.min(...xCoords);
-            const height = Math.max(...yCoords) - Math.min(...yCoords);
-            const area = width * height;
-            document.getElementById('area').textContent = area.toFixed(1);
-            
-            // Auto-scale
-            const maxDim = Math.max(width, height);
-            if(maxDim > 0) {
-                scale = Math.min(300 / maxDim, 100);
-            }
-            
-            offsetX = 0;
-            offsetY = 0;
-            
-            drawPath();
-        }
+device = await navigator.bluetooth.requestDevice({
+  filters:[{name:'PathTracker'}],
+  optionalServices:['19b10000-e8f2-537e-4f6c-d104768a1214']
+});
 
-        function clearPath() {
-            pathData = [];
-            document.getElementById('dataInput').value = '';
-            document.getElementById('steps').textContent = '0';
-            document.getElementById('distance').textContent = '0.0';
-            document.getElementById('posX').textContent = '0.0';
-            document.getElementById('posY').textContent = '0.0';
-            document.getElementById('area').textContent = '0';
-            drawPath();
-        }
+const server = await device.gatt.connect();
+const service = await server.getPrimaryService('19b10000-e8f2-537e-4f6c-d104768a1214');
 
-        function zoomIn() {
-            scale *= 1.3;
-            drawPath();
-        }
+const posChar = await service.getCharacteristic('19b10001-e8f2-537e-4f6c-d104768a1214');
+const stepChar = await service.getCharacteristic('19b10002-e8f2-537e-4f6c-d104768a1214');
+const distChar = await service.getCharacteristic('19b10003-e8f2-537e-4f6c-d104768a1214');
 
-        function zoomOut() {
-            scale /= 1.3;
-            drawPath();
-        }
+await posChar.startNotifications();
+posChar.addEventListener('characteristicvaluechanged', event=>{
+    const value=new TextDecoder().decode(event.target.value);
+    const parts=value.split(",");
+    if(parts.length==2){
+        const x=parseFloat(parts[0]);
+        const y=parseFloat(parts[1]);
 
-        function downloadPath() {
-            if(pathData.length === 0) {
-                alert('No path data to download!');
-                return;
-            }
+        pathData.push({x,y});
 
-            let csv = "Step,Time,X,Y,Distance_from_Start\n";
-            pathData.forEach(p => {
-                const dist = Math.sqrt(p.x*p.x + p.y*p.y);
-                csv += `${p.step},${p.time},${p.x},${p.y},${dist.toFixed(3)}\n`;
-            });
-            
-            const blob = new Blob([csv], {type: 'text/csv'});
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            const date = new Date().toISOString().slice(0,10);
-            a.download = `indoor_path_${date}.csv`;
-            a.click();
-            window.URL.revokeObjectURL(url);
-        }
+        document.getElementById("posX").textContent=x.toFixed(2);
+        document.getElementById("posY").textContent=y.toFixed(2);
 
-        // Load sample data on first visit
-        window.addEventListener('load', () => {
-            drawPath();
-        });
+        drawPath();
+    }
+});
 
-        // Make canvas responsive
-        function resizeCanvas() {
-            if(window.innerWidth < 768) {
-                canvas.width = window.innerWidth - 80;
-                canvas.height = canvas.width * 0.75;
-                drawPath();
-            }
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-    </script>
+await stepChar.startNotifications();
+stepChar.addEventListener('characteristicvaluechanged', e=>{
+    const v=e.target.value.getInt32(0,true);
+    document.getElementById("steps").textContent=v;
+});
+
+await distChar.startNotifications();
+distChar.addEventListener('characteristicvaluechanged', e=>{
+    const v=e.target.value.getFloat32(0,true);
+    document.getElementById("distance").textContent=v.toFixed(2);
+});
+
+alert("✅ Connected to PathTracker");
+
+}catch(err){
+alert("❌ Connection failed: "+err);
+}
+}
+
+function drawPath(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+const cx=canvas.width/2;
+const cy=canvas.height/2;
+
+// grid
+ctx.strokeStyle="#eee";
+for(let i=-20;i<20;i++){
+ctx.beginPath();
+ctx.moveTo(0,cy+i*scale);
+ctx.lineTo(canvas.width,cy+i*scale);
+ctx.stroke();
+
+ctx.beginPath();
+ctx.moveTo(cx+i*scale,0);
+ctx.lineTo(cx+i*scale,canvas.height);
+ctx.stroke();
+}
+
+if(pathData.length<2) return;
+
+ctx.strokeStyle="blue";
+ctx.lineWidth=4;
+ctx.beginPath();
+
+ctx.moveTo(cx+pathData[0].x*scale, cy-pathData[0].y*scale);
+
+for(let p of pathData){
+ctx.lineTo(cx+p.x*scale, cy-p.y*scale);
+}
+
+ctx.stroke();
+
+// start point
+ctx.fillStyle="green";
+ctx.beginPath();
+ctx.arc(cx+pathData[0].x*scale, cy-pathData[0].y*scale,6,0,6.28);
+ctx.fill();
+
+// end point
+let last=pathData[pathData.length-1];
+ctx.fillStyle="red";
+ctx.beginPath();
+ctx.arc(cx+last.x*scale, cy-last.y*scale,6,0,6.28);
+ctx.fill();
+}
+</script>
+
 </body>
 </html>
