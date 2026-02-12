@@ -1,0 +1,193 @@
+html<!DOCTYPE html>
+<html>
+<head>
+    <title>Indoor Path Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        #canvas {
+            border: 2px solid #333;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .stats {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>🗺️ Indoor Path Tracker</h1>
+    
+    <div class="controls">
+        <button onclick="clearPath()">Clear Path</button>
+        <button onclick="zoomIn()">Zoom +</button>
+        <button onclick="zoomOut()">Zoom -</button>
+        <button onclick="downloadPath()">Download Data</button>
+    </div>
+    
+    <canvas id="canvas" width="800" height="800"></canvas>
+    
+    <div class="stats">
+        <h3>Statistics</h3>
+        <p>Steps: <span id="steps">0</span></p>
+        <p>Distance: <span id="distance">0.00</span> m</p>
+        <p>Current Position: (<span id="posX">0.00</span>, <span id="posY">0.00</span>)</p>
+    </div>
+    
+    <div class="controls">
+        <h3>Paste CSV data from Serial Monitor (type 'P'):</h3>
+        <textarea id="dataInput" rows="10" cols="80" placeholder="Step#, Time(s), X(m), Y(m), Distance(m)"></textarea>
+        <br>
+        <button onclick="loadData()">Load & Visualize</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let pathData = [{x: 0, y: 0, step: 0}];
+        let scale = 50;  // pixels per meter
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        function drawPath() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            for(let i = -20; i <= 20; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, centerY + i * scale);
+                ctx.lineTo(canvas.width, centerY + i * scale);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(centerX + i * scale, 0);
+                ctx.lineTo(centerX + i * scale, canvas.height);
+                ctx.stroke();
+            }
+            
+            // Draw axes
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(canvas.width, centerY);
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, canvas.height);
+            ctx.stroke();
+            
+            // Draw path
+            if(pathData.length > 1) {
+                ctx.strokeStyle = '#2196F3';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(centerX + pathData[0].x * scale, centerY - pathData[0].y * scale);
+                
+                for(let i = 1; i < pathData.length; i++) {
+                    ctx.lineTo(centerX + pathData[i].x * scale, centerY - pathData[i].y * scale);
+                }
+                ctx.stroke();
+                
+                // Draw points
+                pathData.forEach((point, i) => {
+                    ctx.fillStyle = i === 0 ? '#4CAF50' : (i === pathData.length - 1 ? '#F44336' : '#2196F3');
+                    ctx.beginPath();
+                    ctx.arc(centerX + point.x * scale, centerY - point.y * scale, 5, 0, 2 * Math.PI);
+                    ctx.fill();
+                });
+            }
+            
+            // Draw start marker
+            ctx.fillStyle = '#4CAF50';
+            ctx.font = '14px Arial';
+            ctx.fillText('START', centerX + 10, centerY - 10);
+        }
+
+        function loadData() {
+            const input = document.getElementById('dataInput').value;
+            const lines = input.trim().split('\n');
+            pathData = [];
+            
+            lines.forEach(line => {
+                const parts = line.split(',').map(s => s.trim());
+                if(parts.length >= 4 && !isNaN(parts[2])) {
+                    pathData.push({
+                        step: parseInt(parts[0]),
+                        x: parseFloat(parts[2]),
+                        y: parseFloat(parts[3])
+                    });
+                }
+            });
+            
+            if(pathData.length > 0) {
+                const last = pathData[pathData.length - 1];
+                document.getElementById('steps').textContent = last.step;
+                document.getElementById('posX').textContent = last.x.toFixed(2);
+                document.getElementById('posY').textContent = last.y.toFixed(2);
+                
+                let totalDist = 0;
+                for(let i = 1; i < pathData.length; i++) {
+                    const dx = pathData[i].x - pathData[i-1].x;
+                    const dy = pathData[i].y - pathData[i-1].y;
+                    totalDist += Math.sqrt(dx*dx + dy*dy);
+                }
+                document.getElementById('distance').textContent = totalDist.toFixed(2);
+                
+                drawPath();
+            }
+        }
+
+        function clearPath() {
+            pathData = [{x: 0, y: 0, step: 0}];
+            drawPath();
+        }
+
+        function zoomIn() {
+            scale *= 1.2;
+            drawPath();
+        }
+
+        function zoomOut() {
+            scale /= 1.2;
+            drawPath();
+        }
+
+        function downloadPath() {
+            let csv = "Step,Time,X,Y,Distance\n";
+            pathData.forEach(p => {
+                csv += `${p.step},0,${p.x},${p.y},${Math.sqrt(p.x*p.x + p.y*p.y)}\n`;
+            });
+            
+            const blob = new Blob([csv], {type: 'text/csv'});
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'path_data.csv';
+            a.click();
+        }
+
+        // Initial draw
+        drawPath();
+    </script>
+</body>
+</html>
