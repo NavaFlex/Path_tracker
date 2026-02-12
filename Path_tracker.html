@@ -1,185 +1,225 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Live Indoor Path Tracker</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indoor Path_tracker</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .container {
             background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            max-width: 900px;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 1000px;
             width: 100%;
         }
         h1 {
-            color: #333;
             text-align: center;
-            margin: 0 0 20px 0;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
         }
-        #canvas {
-            border: 2px solid #333;
-            background: white;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            display: block;
-            margin: 20px auto;
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
         }
-        .controls {
+        .input-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .input-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            resize: vertical;
+            min-height: 120px;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .button-group {
             display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
             gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
             margin: 20px 0;
         }
         button {
-            padding: 12px 24px;
+            padding: 12px 30px;
             font-size: 16px;
-            cursor: pointer;
+            font-weight: bold;
             border: none;
             border-radius: 8px;
-            background: #667eea;
-            color: white;
-            font-weight: bold;
+            cursor: pointer;
             transition: all 0.3s;
+            color: white;
         }
-        button:hover {
-            background: #5568d3;
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
         }
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
+        .btn-secondary {
+            background: #6c757d;
         }
-        .stats {
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        #canvas {
+            display: block;
+            margin: 20px auto;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            background: white;
+        }
+        .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 15px;
             margin: 20px 0;
         }
         .stat-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
+            padding: 20px;
+            border-radius: 12px;
             text-align: center;
-        }
-        .stat-card h3 {
-            margin: 0 0 10px 0;
-            font-size: 14px;
-            opacity: 0.9;
-        }
-        .stat-card .value {
-            font-size: 28px;
-            font-weight: bold;
-        }
-        .connection-status {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        .connected {
-            background: #4CAF50;
             color: white;
         }
-        .disconnected {
-            background: #f44336;
-            color: white;
-        }
-        #dataInput {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-family: monospace;
+        .stat-label {
             font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .tab-buttons {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 15px;
-        }
-        .tab-button {
-            flex: 1;
-            padding: 10px;
-            background: #f0f0f0;
-            border: none;
-            cursor: pointer;
+        .stat-value {
+            font-size: 32px;
             font-weight: bold;
         }
-        .tab-button.active {
-            background: #667eea;
-            color: white;
+        .instructions {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
         }
-        .tab-content {
-            display: none;
+        .instructions h4 {
+            color: #2196F3;
+            margin-bottom: 10px;
         }
-        .tab-content.active {
-            display: block;
+        .instructions ol {
+            margin-left: 20px;
+        }
+        .instructions li {
+            margin: 5px 0;
+            color: #333;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            #canvas {
+                width: 100% !important;
+                height: auto !important;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🗺️ Live Indoor Path Tracker</h1>
+        <h1>🗺️ Indoor Path_tracker</h1>
+        <p class="subtitle">Visualize your walking path with step-by-step precision</p>
         
-        <div style="text-align: center;">
-            <span id="connectionStatus" class="connection-status disconnected">● Disconnected</span>
+        <div class="instructions">
+            <h4>📋 How to Use:</h4>
+            <ol>
+                <li>Upload the Arduino code to your XIAO nRF52840</li>
+                <li>Open Serial Monitor (115200 baud)</li>
+                <li>Walk around and let it track your steps</li>
+                <li>Type <strong>'P'</strong> in Serial Monitor to export data</li>
+                <li>Copy the CSV data and paste it below</li>
+                <li>Click "Visualize Path" to see your route!</li>
+            </ol>
         </div>
         
-        <div class="tab-buttons">
-            <button class="tab-button active" onclick="showTab('live')">Live Tracking</button>
-            <button class="tab-button" onclick="showTab('manual')">Manual Data</button>
+        <div class="input-section">
+            <h3>📊 Paste Your Path Data</h3>
+            <textarea id="dataInput" placeholder="Paste CSV data here...
+Example:
+Step#, Time(s), X(m), Y(m), Distance(m)
+0, 0.0, 0.000, 0.000, 0.000
+1, 1.5, 0.000, 0.650, 0.650
+2, 3.0, 0.000, 1.300, 1.300"></textarea>
         </div>
         
-        <div id="liveTab" class="tab-content active">
-            <div class="controls">
-                <button id="connectBtn" onclick="connectBLE()">Connect BLE</button>
-                <button onclick="clearPath()">Clear Path</button>
-                <button onclick="zoomIn()">Zoom +</button>
-                <button onclick="zoomOut()">Zoom -</button>
-                <button onclick="downloadPath()">Download</button>
-            </div>
-        </div>
-        
-        <div id="manualTab" class="tab-content">
-            <h3>Paste CSV data from Serial Monitor (type 'P'):</h3>
-            <textarea id="dataInput" rows="8" placeholder="Step#, Time(s), X(m), Y(m), Distance(m)"></textarea>
-            <button onclick="loadData()" style="width: 100%; margin-top: 10px;">Load & Visualize</button>
+        <div class="button-group">
+            <button class="btn-primary" onclick="loadData()">📈 Visualize Path</button>
+            <button class="btn-secondary" onclick="clearPath()">🗑️ Clear</button>
+            <button class="btn-secondary" onclick="zoomIn()">🔍 Zoom In</button>
+            <button class="btn-secondary" onclick="zoomOut()">🔍 Zoom Out</button>
+            <button class="btn-success" onclick="downloadPath()">💾 Download CSV</button>
         </div>
         
         <canvas id="canvas" width="800" height="600"></canvas>
         
-        <div class="stats">
+        <div class="stats-grid">
             <div class="stat-card">
-                <h3>STEPS</h3>
-                <div class="value" id="steps">0</div>
+                <div class="stat-label">Steps</div>
+                <div class="stat-value" id="steps">0</div>
             </div>
             <div class="stat-card">
-                <h3>DISTANCE</h3>
-                <div class="value"><span id="distance">0.0</span>m</div>
+                <div class="stat-label">Distance</div>
+                <div class="stat-value"><span id="distance">0.0</span>m</div>
             </div>
             <div class="stat-card">
-                <h3>POSITION</h3>
-                <div class="value" style="font-size: 18px;">
-                    (<span id="posX">0.0</span>, <span id="posY">0.0</span>)
-                </div>
+                <div class="stat-label">Position X</div>
+                <div class="stat-value"><span id="posX">0.0</span>m</div>
             </div>
             <div class="stat-card">
-                <h3>HEADING</h3>
-                <div class="value"><span id="heading">0</span>°</div>
+                <div class="stat-label">Position Y</div>
+                <div class="stat-value"><span id="posY">0.0</span>m</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Area</div>
+                <div class="stat-value"><span id="area">0</span>m²</div>
             </div>
         </div>
     </div>
@@ -187,188 +227,125 @@
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        let pathData = [{x: 0, y: 0, step: 0}];
-        let scale = 60;
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        
-        // BLE variables
-        let bleDevice = null;
-        let bleServer = null;
-        let bleService = null;
-        let positionChar = null;
-        let stepChar = null;
-        let distanceChar = null;
-        let headingChar = null;
-
-        function showTab(tab) {
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            if(tab === 'live') {
-                document.querySelector('.tab-button:nth-child(1)').classList.add('active');
-                document.getElementById('liveTab').classList.add('active');
-            } else {
-                document.querySelector('.tab-button:nth-child(2)').classList.add('active');
-                document.getElementById('manualTab').classList.add('active');
-            }
-        }
-
-        async function connectBLE() {
-            try {
-                document.getElementById('connectBtn').disabled = true;
-                document.getElementById('connectBtn').textContent = 'Connecting...';
-                
-                // Request BLE device
-                bleDevice = await navigator.bluetooth.requestDevice({
-                    filters: [{ name: 'PathTracker' }],
-                    optionalServices: ['19b10000-e8f2-537e-4f6c-d104768a1214']
-                });
-                
-                // Connect to GATT server
-                bleServer = await bleDevice.gatt.connect();
-                bleService = await bleServer.getPrimaryService('19b10000-e8f2-537e-4f6c-d104768a1214');
-                
-                // Get characteristics
-                positionChar = await bleService.getCharacteristic('19b10001-e8f2-537e-4f6c-d104768a1214');
-                stepChar = await bleService.getCharacteristic('19b10002-e8f2-537e-4f6c-d104768a1214');
-                distanceChar = await bleService.getCharacteristic('19b10003-e8f2-537e-4f6c-d104768a1214');
-                headingChar = await bleService.getCharacteristic('19b10004-e8f2-537e-4f6c-d104768a1214');
-                
-                // Start notifications
-                await positionChar.startNotifications();
-                await stepChar.startNotifications();
-                await distanceChar.startNotifications();
-                await headingChar.startNotifications();
-                
-                // Add event listeners
-                positionChar.addEventListener('characteristicvaluechanged', handlePositionChange);
-                stepChar.addEventListener('characteristicvaluechanged', handleStepChange);
-                distanceChar.addEventListener('characteristicvaluechanged', handleDistanceChange);
-                headingChar.addEventListener('characteristicvaluechanged', handleHeadingChange);
-                
-                // Update UI
-                document.getElementById('connectionStatus').textContent = '● Connected';
-                document.getElementById('connectionStatus').className = 'connection-status connected';
-                document.getElementById('connectBtn').textContent = 'Connected';
-                
-                console.log('BLE connected successfully!');
-                
-            } catch(error) {
-                console.error('BLE connection failed:', error);
-                alert('Failed to connect. Make sure:\n1. Bluetooth is enabled\n2. XIAO is powered on\n3. You\'re using Chrome/Edge browser');
-                document.getElementById('connectBtn').disabled = false;
-                document.getElementById('connectBtn').textContent = 'Connect BLE';
-            }
-        }
-
-        function handlePositionChange(event) {
-            const value = new TextDecoder().decode(event.target.value);
-            const [x, y] = value.split(',').map(parseFloat);
-            
-            // Add to path
-            pathData.push({x, y, step: pathData.length});
-            document.getElementById('posX').textContent = x.toFixed(2);
-            document.getElementById('posY').textContent = y.toFixed(2);
-            
-            drawPath();
-        }
-
-        function handleStepChange(event) {
-            const value = event.target.value.getInt32(0, true);
-            document.getElementById('steps').textContent = value;
-        }
-
-        function handleDistanceChange(event) {
-            const value = event.target.value.getFloat32(0, true);
-            document.getElementById('distance').textContent = value.toFixed(2);
-        }
-
-        function handleHeadingChange(event) {
-            const value = event.target.value.getFloat32(0, true);
-            document.getElementById('heading').textContent = value.toFixed(0);
-        }
+        let pathData = [];
+        let scale = 50;
+        let offsetX = 0;
+        let offsetY = 0;
 
         function drawPath() {
+            if(pathData.length === 0) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#999';
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Paste data and click "Visualize Path"', canvas.width/2, canvas.height/2);
+                return;
+            }
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             // Draw grid
-            ctx.strokeStyle = '#e0e0e0';
+            ctx.strokeStyle = '#f0f0f0';
             ctx.lineWidth = 1;
             for(let i = -20; i <= 20; i++) {
                 ctx.beginPath();
-                ctx.moveTo(0, centerY + i * scale);
-                ctx.lineTo(canvas.width, centerY + i * scale);
+                ctx.moveTo(0, centerY + i * scale + offsetY);
+                ctx.lineTo(canvas.width, centerY + i * scale + offsetY);
                 ctx.stroke();
                 
                 ctx.beginPath();
-                ctx.moveTo(centerX + i * scale, 0);
-                ctx.lineTo(centerX + i * scale, canvas.height);
+                ctx.moveTo(centerX + i * scale + offsetX, 0);
+                ctx.lineTo(centerX + i * scale + offsetX, canvas.height);
                 ctx.stroke();
             }
             
             // Draw axes
-            ctx.strokeStyle = '#999';
+            ctx.strokeStyle = '#ccc';
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(0, centerY);
-            ctx.lineTo(canvas.width, centerY);
-            ctx.moveTo(centerX, 0);
-            ctx.lineTo(centerX, canvas.height);
+            ctx.moveTo(0, centerY + offsetY);
+            ctx.lineTo(canvas.width, centerY + offsetY);
+            ctx.moveTo(centerX + offsetX, 0);
+            ctx.lineTo(centerX + offsetX, canvas.height);
             ctx.stroke();
             
-            // Draw meter labels
+            // Draw labels
             ctx.fillStyle = '#999';
-            ctx.font = '10px Arial';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
             for(let i = -10; i <= 10; i++) {
-                if(i !== 0) {
-                    ctx.fillText(i + 'm', centerX + i * scale - 10, centerY - 5);
-                    ctx.fillText(i + 'm', centerX + 5, centerY - i * scale + 3);
+                if(i !== 0 && Math.abs(i * scale) < canvas.width/2) {
+                    ctx.fillText(i + 'm', centerX + i * scale + offsetX, centerY + offsetY + 20);
                 }
             }
             
-            // Draw path
+            // Draw path with gradient
             if(pathData.length > 1) {
-                // Path line with gradient
                 const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
                 gradient.addColorStop(0, '#667eea');
                 gradient.addColorStop(1, '#764ba2');
                 
                 ctx.strokeStyle = gradient;
                 ctx.lineWidth = 4;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
                 ctx.beginPath();
-                ctx.moveTo(centerX + pathData[0].x * scale, centerY - pathData[0].y * scale);
+                
+                const firstPoint = pathData[0];
+                ctx.moveTo(
+                    centerX + firstPoint.x * scale + offsetX,
+                    centerY - firstPoint.y * scale + offsetY
+                );
                 
                 for(let i = 1; i < pathData.length; i++) {
-                    ctx.lineTo(centerX + pathData[i].x * scale, centerY - pathData[i].y * scale);
+                    ctx.lineTo(
+                        centerX + pathData[i].x * scale + offsetX,
+                        centerY - pathData[i].y * scale + offsetY
+                    );
                 }
                 ctx.stroke();
                 
                 // Draw points
                 pathData.forEach((point, i) => {
+                    const x = centerX + point.x * scale + offsetX;
+                    const y = centerY - point.y * scale + offsetY;
+                    
                     if(i === 0) {
-                        // Start point (green)
+                        // Start point
                         ctx.fillStyle = '#4CAF50';
                         ctx.beginPath();
-                        ctx.arc(centerX + point.x * scale, centerY - point.y * scale, 8, 0, 2 * Math.PI);
+                        ctx.arc(x, y, 10, 0, 2 * Math.PI);
                         ctx.fill();
+                        ctx.strokeStyle = 'white';
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                        
                         ctx.fillStyle = 'white';
-                        ctx.font = 'bold 12px Arial';
-                        ctx.fillText('START', centerX + point.x * scale + 12, centerY - point.y * scale + 5);
+                        ctx.font = 'bold 14px Arial';
+                        ctx.textAlign = 'left';
+                        ctx.fillText('START', x + 15, y + 5);
                     } else if(i === pathData.length - 1) {
-                        // Current position (red, pulsing)
+                        // End point
                         ctx.fillStyle = '#F44336';
                         ctx.beginPath();
-                        ctx.arc(centerX + point.x * scale, centerY - point.y * scale, 10, 0, 2 * Math.PI);
+                        ctx.arc(x, y, 10, 0, 2 * Math.PI);
                         ctx.fill();
+                        ctx.strokeStyle = 'white';
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                        
                         ctx.fillStyle = 'white';
-                        ctx.font = 'bold 12px Arial';
-                        ctx.fillText('YOU', centerX + point.x * scale + 15, centerY - point.y * scale + 5);
-                    } else {
-                        // Path points (blue)
+                        ctx.font = 'bold 14px Arial';
+                        ctx.textAlign = 'left';
+                        ctx.fillText('END', x + 15, y + 5);
+                    } else if(i % 5 === 0) {
+                        // Intermediate points
                         ctx.fillStyle = '#2196F3';
                         ctx.beginPath();
-                        ctx.arc(centerX + point.x * scale, centerY - point.y * scale, 3, 0, 2 * Math.PI);
+                        ctx.arc(x, y, 4, 0, 2 * Math.PI);
                         ctx.fill();
                     }
                 });
@@ -377,76 +354,126 @@
 
         function loadData() {
             const input = document.getElementById('dataInput').value;
+            if(!input.trim()) {
+                alert('Please paste CSV data first!');
+                return;
+            }
+
             const lines = input.trim().split('\n');
             pathData = [];
             
-            lines.forEach(line => {
+            lines.forEach((line, index) => {
+                // Skip header line
+                if(index === 0 && line.toLowerCase().includes('step')) return;
+                
                 const parts = line.split(',').map(s => s.trim());
                 if(parts.length >= 4 && !isNaN(parts[2])) {
                     pathData.push({
-                        step: parseInt(parts[0]),
+                        step: parseInt(parts[0]) || 0,
+                        time: parseFloat(parts[1]) || 0,
                         x: parseFloat(parts[2]),
                         y: parseFloat(parts[3])
                     });
                 }
             });
             
-            if(pathData.length > 0) {
-                const last = pathData[pathData.length - 1];
-                document.getElementById('steps').textContent = last.step;
-                document.getElementById('posX').textContent = last.x.toFixed(2);
-                document.getElementById('posY').textContent = last.y.toFixed(2);
-                
-                let totalDist = 0;
-                for(let i = 1; i < pathData.length; i++) {
-                    const dx = pathData[i].x - pathData[i-1].x;
-                    const dy = pathData[i].y - pathData[i-1].y;
-                    totalDist += Math.sqrt(dx*dx + dy*dy);
-                }
-                document.getElementById('distance').textContent = totalDist.toFixed(2);
-                
-                drawPath();
+            if(pathData.length === 0) {
+                alert('No valid data found. Make sure to paste CSV in format:\nStep#, Time(s), X(m), Y(m), Distance(m)');
+                return;
             }
+
+            // Calculate stats
+            const last = pathData[pathData.length - 1];
+            document.getElementById('steps').textContent = last.step;
+            document.getElementById('posX').textContent = last.x.toFixed(2);
+            document.getElementById('posY').textContent = last.y.toFixed(2);
+            
+            let totalDist = 0;
+            for(let i = 1; i < pathData.length; i++) {
+                const dx = pathData[i].x - pathData[i-1].x;
+                const dy = pathData[i].y - pathData[i-1].y;
+                totalDist += Math.sqrt(dx*dx + dy*dy);
+            }
+            document.getElementById('distance').textContent = totalDist.toFixed(2);
+            
+            // Calculate area (bounding box)
+            const xCoords = pathData.map(p => p.x);
+            const yCoords = pathData.map(p => p.y);
+            const width = Math.max(...xCoords) - Math.min(...xCoords);
+            const height = Math.max(...yCoords) - Math.min(...yCoords);
+            const area = width * height;
+            document.getElementById('area').textContent = area.toFixed(1);
+            
+            // Auto-scale
+            const maxDim = Math.max(width, height);
+            if(maxDim > 0) {
+                scale = Math.min(300 / maxDim, 100);
+            }
+            
+            offsetX = 0;
+            offsetY = 0;
+            
+            drawPath();
         }
 
         function clearPath() {
-            pathData = [{x: 0, y: 0, step: 0}];
+            pathData = [];
+            document.getElementById('dataInput').value = '';
+            document.getElementById('steps').textContent = '0';
+            document.getElementById('distance').textContent = '0.0';
+            document.getElementById('posX').textContent = '0.0';
+            document.getElementById('posY').textContent = '0.0';
+            document.getElementById('area').textContent = '0';
             drawPath();
         }
 
         function zoomIn() {
-            scale *= 1.2;
+            scale *= 1.3;
             drawPath();
         }
 
         function zoomOut() {
-            scale /= 1.2;
+            scale /= 1.3;
             drawPath();
         }
 
         function downloadPath() {
-            let csv = "Step,X,Y,Distance\n";
+            if(pathData.length === 0) {
+                alert('No path data to download!');
+                return;
+            }
+
+            let csv = "Step,Time,X,Y,Distance_from_Start\n";
             pathData.forEach(p => {
-                csv += `${p.step},${p.x},${p.y},${Math.sqrt(p.x*p.x + p.y*p.y)}\n`;
+                const dist = Math.sqrt(p.x*p.x + p.y*p.y);
+                csv += `${p.step},${p.time},${p.x},${p.y},${dist.toFixed(3)}\n`;
             });
             
             const blob = new Blob([csv], {type: 'text/csv'});
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'path_data_' + new Date().toISOString().slice(0,10) + '.csv';
+            const date = new Date().toISOString().slice(0,10);
+            a.download = `indoor_path_${date}.csv`;
             a.click();
+            window.URL.revokeObjectURL(url);
         }
 
-        // Initial draw
-        drawPath();
-        
-        // Auto-refresh display
-        setInterval(() => {
-            if(pathData.length > 1) {
+        // Load sample data on first visit
+        window.addEventListener('load', () => {
+            drawPath();
+        });
+
+        // Make canvas responsive
+        function resizeCanvas() {
+            if(window.innerWidth < 768) {
+                canvas.width = window.innerWidth - 80;
+                canvas.height = canvas.width * 0.75;
                 drawPath();
             }
-        }, 100);
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
     </script>
 </body>
 </html>
